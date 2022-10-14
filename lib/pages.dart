@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
+import 'package:provider/provider.dart';
 
 class MyCountPage extends StatelessWidget {
   const MyCountPage({Key? key}) : super(key: key);
@@ -8,6 +9,7 @@ class MyCountPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final myStyle = Theme.of(context).textTheme.headline4;
+    CountProvider state = Provider.of<CountProvider>(context);
 
     return Scaffold(
       body: Center(
@@ -19,19 +21,19 @@ class MyCountPage extends StatelessWidget {
               style: TextStyle(fontSize: 20.0),
             ),
             SizedBox(height: 50.0),
-            Text('0', style: myStyle),
+            Text('${state.counterValue}', style: myStyle),
             ButtonBar(
               alignment: MainAxisAlignment.center,
               children: [
                 IconButton(
                   icon: Icon(Icons.remove),
                   color: Colors.red,
-                  onPressed: () {},
+                  onPressed: () => state._decrementCount(),
                 ),
                 IconButton(
                   icon: Icon(Icons.add),
                   color: Colors.green,
-                  onPressed: () {},
+                  onPressed: () => state._incrementCount(),
                 ),
               ],
             )
@@ -56,19 +58,25 @@ class MyUserPage extends StatelessWidget {
             style: TextStyle(fontSize: 17),
           ),
         ),
-        Expanded(
-          child: ListView.builder(
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return Container(
-                  height: 50,
-                  color: Colors.grey[(index * 200) % 400],
-                  child: Center(
-                    child: Text('text'.toUpperCase()),
-                  ),
-                );
-              }),
-        )
+        Consumer<List<User>>(builder: (context, List<User> users, _) {
+          return Expanded(
+            child: users.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: users.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        height: 50,
+                        color: Colors.grey[(index * 200) % 400],
+                        child: Center(
+                          child: Text(
+                              '${users[index].firstName} ${users[index].lastName} | ${users[index].website}'
+                                  .toUpperCase()),
+                        ),
+                      );
+                    }),
+          );
+        }),
       ],
     );
   }
@@ -80,6 +88,7 @@ class MyEventPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final myStyle = Theme.of(context).textTheme.headline4;
+    var value = Provider.of<int>(context);
 
     return Center(
       child: Column(
@@ -88,12 +97,30 @@ class MyEventPage extends StatelessWidget {
           Text('StreamProvider Example', style: TextStyle(fontSize: 20.0)),
           SizedBox(height: 50.0),
           Text(
-            '0',
+            value.toString(),
             style: myStyle,
           )
         ],
       ),
     );
+  }
+}
+
+// CountProvider (change notifier)
+
+class CountProvider extends ChangeNotifier {
+  int _count = 0;
+
+  int get counterValue => _count;
+
+  void _incrementCount() {
+    _count++;
+    notifyListeners();
+  }
+
+  void _decrementCount() {
+    _count--;
+    notifyListeners();
   }
 }
 
